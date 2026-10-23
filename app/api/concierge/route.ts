@@ -1,24 +1,25 @@
 import { NextResponse } from "next/server";
 
+type Lang = "fr" | "en" | "nl" | "es";
 const phone = "32466076080";
+const answers = {
+  fr: { fallback:"Je peux vous renseigner sur les services, l’adresse ou vous aider à préparer une demande de rendez-vous.", booking:"Avec plaisir. Indiquez le service souhaité et le jour qui vous convient, puis finalisez avec le salon sur WhatsApp.", prices:"Les tarifs peuvent dépendre du service choisi. Précisez si vous souhaitez une coupe, une barbe ou les deux, ou demandez directement au salon sur WhatsApp.", services:"Karan Saloon propose coupe, barbe et contours, formule coupe + barbe et conseil de style. Pour une demande particulière, envoyez une photo d’inspiration sur WhatsApp.", location:"Le salon se trouve Rue Longue Vie 44-22, 1050 Ixelles, Bruxelles. Utilisez le bouton Itinéraire de cette page.", hours:"Les horaires ne sont pas encore affichés ici. Appelez le +32 466 07 60 80 ou écrivez sur WhatsApp pour confirmer l’ouverture.", hello:"Bonjour ! Je peux vous aider à choisir un service puis préparer votre demande de rendez-vous.", wa:"Bonjour Karan Saloon, je souhaite réserver un rendez-vous." },
+  en: { fallback:"I can tell you about our services and location or help prepare an appointment request.", booking:"Of course. Tell me which service and day you prefer, then complete your request with the salon on WhatsApp.", prices:"Prices may depend on the service. Tell me whether you want a haircut, beard service or both, or ask the salon directly on WhatsApp.", services:"Karan Saloon offers haircuts, beard and contour work, cut + beard, and personal style advice. For a specific request, send an inspiration photo on WhatsApp.", location:"The salon is at Rue Longue Vie 44-22, 1050 Ixelles, Brussels. Use the Directions button on this page.", hours:"Opening hours are not yet listed here. Call +32 466 07 60 80 or message us on WhatsApp to confirm today’s opening and availability.", hello:"Hello! I can help you choose a service and prepare your appointment request.", wa:"Hello Karan Saloon, I would like to book an appointment." },
+  nl: { fallback:"Ik kan je meer vertellen over onze diensten en locatie of helpen een reservatie voor te bereiden.", booking:"Graag. Vertel welke dienst en dag je voorkeur heeft en rond je aanvraag daarna af met de salon via WhatsApp.", prices:"Prijzen kunnen per dienst verschillen. Zeg of je een coupe, baardservice of beide wilt, of vraag het rechtstreeks aan de salon via WhatsApp.", services:"Karan Saloon biedt coupes, baard en contouren, coupe + baard en persoonlijk stijladvies. Stuur voor een specifieke wens een inspiratiefoto via WhatsApp.", location:"De salon ligt aan Rue Longue Vie 44-22, 1050 Elsene, Brussel. Gebruik de knop Route op deze pagina.", hours:"De openingsuren staan hier nog niet vermeld. Bel +32 466 07 60 80 of stuur een WhatsApp-bericht om de opening en beschikbaarheid te bevestigen.", hello:"Hallo! Ik help je graag een dienst kiezen en je reservatie voorbereiden.", wa:"Hallo Karan Saloon, ik wil graag een afspraak maken." },
+  es: { fallback:"Puedo informarte sobre los servicios y la ubicación o ayudarte a preparar una solicitud de cita.", booking:"Claro. Dime qué servicio y qué día prefieres y completa después tu solicitud con el salón por WhatsApp.", prices:"Los precios pueden depender del servicio. Dime si deseas corte, barba o ambos, o consulta directamente al salón por WhatsApp.", services:"Karan Saloon ofrece corte, barba y contornos, corte + barba y asesoramiento de estilo. Para una petición específica, envía una foto de inspiración por WhatsApp.", location:"El salón está en Rue Longue Vie 44-22, 1050 Ixelles, Bruselas. Usa el botón Cómo llegar de esta página.", hours:"Los horarios todavía no aparecen aquí. Llama al +32 466 07 60 80 o escribe por WhatsApp para confirmar la apertura y disponibilidad.", hello:"¡Hola! Puedo ayudarte a elegir un servicio y preparar tu solicitud de cita.", wa:"Hola Karan Saloon, me gustaría reservar una cita." }
+} as const;
 
 export async function POST(request: Request) {
   const body = await request.json().catch(() => ({}));
   const message = String(body.message || "").slice(0, 500).toLowerCase();
-  let reply = "Je peux vous renseigner sur nos services, l’adresse ou vous aider à préparer une demande de rendez-vous. Que souhaitez-vous savoir ?";
-  if (/book|réserv|rendez|rdv|afspraak|appointment|disponib/.test(message)) {
-    const text = encodeURIComponent("Bonjour Karan Saloon, je souhaite réserver un rendez-vous. Mon service souhaité : … Mon jour/heure préféré : …");
-    reply = `Avec plaisir. Indiquez le service souhaité et le jour qui vous convient, puis finalisez avec le salon ici : https://wa.me/${phone}?text=${text}`;
-  } else if (/prix|tarif|price|cost|kost|hoeveel/.test(message)) {
-    reply = "Les tarifs peuvent dépendre du service choisi. Pour obtenir le prix exact, dites-moi si vous souhaitez une coupe, une barbe ou les deux — ou demandez directement au salon sur WhatsApp.";
-  } else if (/service|coupe|barbe|hair|beard|knip|baard|fade|contour/.test(message)) {
-    reply = "Karan Saloon propose les essentiels du grooming masculin : coupe, barbe et contours, formule coupe + barbe et conseil de style. Pour une demande particulière, envoyez une photo d’inspiration sur WhatsApp.";
-  } else if (/adresse|address|waar|venir|route|itinéraire|location|parking/.test(message)) {
-    reply = "Le salon se trouve Rue Longue Vie 44-22, 1050 Ixelles, Bruxelles. Vous pouvez ouvrir l’itinéraire depuis la section “Nous trouver” de cette page.";
-  } else if (/heure|horaire|open|ouvert|uur|wanneer/.test(message)) {
-    reply = "Les horaires ne sont pas encore affichés ici. Appelez le +32 466 07 60 80 ou écrivez sur WhatsApp pour confirmer l’ouverture et les disponibilités du jour.";
-  } else if (/bonjour|hello|salut|hallo|hey/.test(message)) {
-    reply = "Bonjour ! Je peux vous aider à choisir entre une coupe, un service barbe ou la formule complète, puis préparer votre demande de rendez-vous.";
-  }
-  return NextResponse.json({ reply });
+  const lang: Lang = body.lang in answers ? body.lang : "fr";
+  const a = answers[lang];
+  let reply = a.fallback;
+  if (/book|réserv|rendez|rdv|afspraak|appointment|disponib|reserver|reservar|cita/.test(message)) reply = `${a.booking} https://wa.me/${phone}?text=${encodeURIComponent(a.wa)}`;
+  else if (/prix|tarif|price|cost|kost|hoeveel|precio|cuánto/.test(message)) reply = a.prices;
+  else if (/service|coupe|barbe|hair|beard|knip|baard|fade|contour|corte|barba/.test(message)) reply = a.services;
+  else if (/adresse|address|waar|venir|route|itinéraire|location|parking|dirección|llegar/.test(message)) reply = a.location;
+  else if (/heure|horaire|open|ouvert|uur|wanneer|horario|abierto/.test(message)) reply = a.hours;
+  else if (/bonjour|hello|salut|hallo|hey|hola|buenas/.test(message)) reply = a.hello;
+  return NextResponse.json({ reply, lang });
 }
