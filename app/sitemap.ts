@@ -1,2 +1,2 @@
 import type { MetadataRoute } from "next";
-export default function sitemap(): MetadataRoute.Sitemap { return [{ url: "https://karan-saloon-brussels.amiteshthecoder.chatgpt.site", lastModified: new Date(), changeFrequency: "monthly", priority: 1 }]; }
+export default function sitemap(): MetadataRoute.Sitemap { return [{ url: "https://karan-style-brussels.amiteshthecoder.chatgpt.site", lastModified: new Date(), changeFrequency: "monthly", priority: 1 }]; }
